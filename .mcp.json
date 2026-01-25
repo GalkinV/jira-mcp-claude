@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "jira": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "jira-mcp-server",
+        "python",
+        "jira_mcp_server.py"
+      ]
+    }
+  }
+}

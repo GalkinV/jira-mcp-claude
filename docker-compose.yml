@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  jira-mcp:
+    build: .
+    container_name: jira-mcp-server
+    env_file:
+      - .env
+    environment:
+      - JIRA_URL=${JIRA_URL}
+      - JIRA_EMAIL=${JIRA_EMAIL}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    volumes:
+      - ./jira_mcp_server.py:/app/jira_mcp_server.py:ro
