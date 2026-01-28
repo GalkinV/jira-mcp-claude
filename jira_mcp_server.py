@@ -175,6 +175,15 @@ async def list_tools() -> List[Tool]:
                 },
                 "required": ["issue_key", "transition"]
             }
+        ),
+        Tool(
+            name="get_fields",
+            description="Получить список всех полей Jira с их ID и названиями (включая кастомные поля)",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
         )
     ]
 
@@ -199,6 +208,18 @@ async def call_tool(name: str, arguments: Any) -> List[TextContent]:
                 "priority": issue.fields.priority.name if issue.fields.priority else "None",
                 "issue_type": issue.fields.issuetype.name
             }
+
+            # Получаем маппинг ID -> название для кастомных полей
+            fields_list = jira.fields()
+            field_id_to_name = {f["id"]: f["name"] for f in fields_list}
+
+            # Добавляем кастомные поля с человекочитаемыми названиями
+            raw_fields = issue.raw.get("fields", {})
+            for field_id, field_value in raw_fields.items():
+                if field_id.startswith("customfield_") and field_value is not None:
+                    field_name = field_id_to_name.get(field_id, field_id)
+                    result[field_name] = field_value
+
             return [TextContent(type="text", text=str(result))]
 
         elif name == "search_issues":
@@ -241,6 +262,17 @@ async def call_tool(name: str, arguments: Any) -> List[TextContent]:
         elif name == "transition_issue":
             jira.transition_issue(arguments["issue_key"], arguments["transition"])
             return [TextContent(type="text", text=f"Изменен статус задачи: {arguments['issue_key']}")]
+
+        elif name == "get_fields":
+            fields = jira.fields()
+            result = []
+            for field in fields:
+                result.append({
+                    "id": field["id"],
+                    "name": field["name"],
+                    "custom": field.get("custom", False)
+                })
+            return [TextContent(type="text", text=str(result))]
 
         else:
             return [TextContent(type="text", text=f"Неизвестный инструмент: {name}")]
